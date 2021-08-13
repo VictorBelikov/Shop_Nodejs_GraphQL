@@ -10,7 +10,7 @@ const server = http.createServer(app);
 (async () => {
   try {
     await mongoose.connect(
-      'mongodb+srv://V1ctoR:WwMEMQ54Y7T1K1Xk@online-shop.5yjc5.mongodb.net/shop_mongoose_graphql?retryWrites=true&w=majority',
+      'mongodb://V1ctoR:WwMEMQ54Y7T1K1Xk@online-shop-shard-00-00.5yjc5.mongodb.net:27017,online-shop-shard-00-01.5yjc5.mongodb.net:27017,online-shop-shard-00-02.5yjc5.mongodb.net:27017/shop_mongoose_graphql?ssl=true&replicaSet=atlas-uxfy7r-shard-0&authSource=admin&retryWrites=true&w=majority',
       {
         useNewUrlParser: true,
         useUnifiedTopology: true,
