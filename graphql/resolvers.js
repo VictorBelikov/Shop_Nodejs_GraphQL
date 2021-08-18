@@ -22,6 +22,14 @@ const findPost = async (postId) => {
   return post;
 };
 
+const findUser = async (id) => {
+  const user = await User.findById(id); // In check-auth.js
+  if (!user) {
+    throw ErrorService(404, 'User not found.');
+  }
+  return user;
+};
+
 const validatePost = (title, content) => {
   const errs = [];
 
@@ -80,11 +88,7 @@ module.exports = {
 
     const { title, content, imageUrl } = postData;
     validatePost(title, content);
-
-    const user = await User.findById(req.userId); // In check-auth.js
-    if (!user) {
-      throw ErrorService(404, 'User not found.');
-    }
+    const user = await findUser(req.userId);
 
     const newPost = await new Post({ title, content, imageUrl, creator: user }).save();
     user.posts.push(newPost);
@@ -172,5 +176,19 @@ module.exports = {
     user.posts.pull(id); // Вытягиваем (удаляeм) эл-т по id
     await user.save();
     return true;
+  },
+
+  async getUserStatus(args, req) {
+    checkAuth(req);
+    const user = await findUser(req.userId);
+    return { ...user._doc, _id: user._id.toString() };
+  },
+
+  async updateUserStatus({ status }, req) {
+    checkAuth(req);
+    const user = await findUser(req.userId);
+    user.status = status;
+    await user.save();
+    return { ...user._doc, _id: user._id.toString() };
   },
 };

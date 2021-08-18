@@ -22,19 +22,30 @@ class Feed extends Component {
   };
 
   componentDidMount() {
-    fetch('http://localhost:8080/auth/status', {
+    const graphqlQuery = {
+      query: `{
+        getUserStatus {
+          status
+        }
+      }`,
+    };
+
+    fetch('http://localhost:8080/graphql', {
+      method: 'POST',
+      body: JSON.stringify(graphqlQuery),
       headers: {
         Authorization: `Bearer ${this.props.token}`,
+        'Content-Type': 'application/json',
       },
     })
       .then((res) => {
-        if (res.status !== 200) {
-          throw new Error('Failed to fetch user status.');
-        }
         return res.json();
       })
       .then((resData) => {
-        this.setState({ status: resData.status });
+        if (resData.errors) {
+          throw new Error('Failed fetching User');
+        }
+        this.setState({ status: resData.data.getUserStatus.status });
       })
       .catch(this.catchError);
 
@@ -79,7 +90,6 @@ class Feed extends Component {
         if (resData.errors) {
           throw new Error('Failed to fetch Posts');
         }
-        console.log(resData);
         this.setState({
           posts: resData.data.getPosts.posts.map((p) => ({ ...p, imagePath: p.imageUrl })),
           totalPosts: resData.data.getPosts.totalPosts,
@@ -91,18 +101,25 @@ class Feed extends Component {
 
   statusUpdateHandler = (event) => {
     event.preventDefault();
-    fetch('http://localhost:8080/auth/status', {
-      method: 'PATCH',
-      body: JSON.stringify({ status: this.state.status }),
+
+    let graphqlQuery = {
+      query: `
+        mutation {
+          updateUserStatus(status: "${this.state.status}") {
+            status
+          }
+        }`,
+    };
+
+    fetch('http://localhost:8080/graphql', {
+      method: 'POST',
+      body: JSON.stringify(graphqlQuery),
       headers: {
         Authorization: `Bearer ${this.props.token}`,
         'Content-Type': 'application/json',
       },
     })
       .then((res) => {
-        if (res.status !== 200 && res.status !== 201) {
-          throw new Error("Can't update status!");
-        }
         return res.json();
       })
       .then((resData) => {
