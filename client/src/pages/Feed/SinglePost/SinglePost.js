@@ -15,11 +15,12 @@ class SinglePost extends Component {
   componentDidMount() {
     const { postId } = this.props.match.params;
     const graphqlQuery = {
-      query: `{
-        getPost(id: "${postId}") {
+      query: `query GetSpecificPost($postId: ID!) {
+        getPost(id: $postId) {
           _id title content imageUrl creator { name } createdAt
         }
       }`,
+      variables: { postId },
     };
 
     fetch(`http://localhost:8080/graphql`, {

@@ -67,12 +67,14 @@ class Feed extends Component {
     }
 
     const graphqlQuery = {
-      query: `{
-        getPosts(page: ${page}) {
-          posts { _id title content imageUrl creator { name } createdAt }
-          totalPosts
-        }
-      }`,
+      query: `
+        query FetchPosts($pageNumber: Int) {
+          getPosts(page: $pageNumber) {
+            posts { _id title content imageUrl creator { name } createdAt }
+            totalPosts
+          }
+        }`,
+      variables: { pageNumber: page },
     };
 
     fetch(`http://localhost:8080/graphql`, {
@@ -102,13 +104,14 @@ class Feed extends Component {
   statusUpdateHandler = (event) => {
     event.preventDefault();
 
-    let graphqlQuery = {
+    const graphqlQuery = {
       query: `
-        mutation {
-          updateUserStatus(status: "${this.state.status}") {
+        mutation UpdateUserStatus($userStatus: String!) {
+          updateUserStatus(status: $userStatus) {
             status
           }
         }`,
+      variables: { userStatus: this.state.status },
     };
 
     fetch('http://localhost:8080/graphql', {
@@ -171,21 +174,32 @@ class Feed extends Component {
 
     let graphqlQuery = {
       query: `
-        mutation {
-          createPost(postData: {title: "${title}", content: "${content}", imageUrl: "${jsonData.filePath}"}) {
+        mutation CreatePost($title: String!, $content: String!, $imageUrl: String!) {
+          createPost(postData: { title: $title, content: $content, imageUrl: $imageUrl }) {
             _id title content imageUrl creator { name } createdAt
           }
         }`,
+      variables: {
+        title,
+        content,
+        imageUrl: jsonData.filePath,
+      },
     };
 
     if (this.state.editPost) {
       graphqlQuery = {
         query: `
-        mutation {
-          updatePost(id: "${this.state.editPost._id}", postData: {title: "${title}", content: "${content}", imageUrl: "${jsonData.filePath}"}) {
-            _id title content imageUrl creator { name } createdAt
-          }
-        }`,
+          mutation UpdatePost($postId: ID!, $title: String!, $content: String!, $imageUrl: String!) {
+            updatePost(id: $postId, postData: { title: $title, content: $content, imageUrl: $imageUrl }) {
+              _id title content imageUrl creator { name } createdAt
+            }
+          }`,
+        variables: {
+          postId: this.state.editPost._id,
+          title,
+          content,
+          imageUrl: jsonData.filePath || 'undefined',
+        },
       };
     }
 
